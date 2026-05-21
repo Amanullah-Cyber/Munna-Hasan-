@@ -1,0 +1,78 @@
+// --- User State Management ---
+let user = {
+    id: "user123",
+    strikeCount: 0,
+    isBanned: false,
+    banExpiry: null
+};
+
+// --- Main System Control ---
+function processInput(inputData, type) {
+    // 1. Check if user is banned
+    if (!checkAccess()) {
+        updateUI("ACCESS DENIED: ACCOUNT BANNED", "#ff0055");
+        return;
+    }
+
+    // 2. Validate using powerful filters
+    if (runPowerfulFilters(inputData)) {
+        updateUI("SUCCESS: " + type + " IS SAFE", "#00ff9d");
+    } else {
+        updateUI("THREAT DETECTED: INVALID INPUT", "#ff0055");
+        alert("WARNING: THREAT DETECTED!"); // Browser alert
+        handleStrike();
+    }
+}
+
+// --- Powerful Filter System ---
+function runPowerfulFilters(data) {
+    if (!data || data.length < 5) return false;
+
+    const forbidden = ["malware", "phishing", "spam", "virus", "badlink"];
+    if (forbidden.some(word => data.toLowerCase().includes(word))) return false;
+    
+    const dangerousChars = ["<", ">", ";", "--", "DROP", "SELECT"];
+    if (dangerousChars.some(char => data.toUpperCase().includes(char))) return false;
+
+    return true;
+}
+
+// --- Visual Feedback System ---
+function updateUI(message, color) {
+    const display = document.getElementById("status-display");
+    if (display) {
+        // Applying styles directly for clear visual feedback
+        display.style.border = `2px solid ${color}`;
+        display.style.backgroundColor = color === "#ff0055" ? "#ffe6e6" : "#e6fff2";
+        display.style.padding = "15px";
+        display.style.borderRadius = "8px";
+        display.innerHTML = `<h2 style="color:${color}; font-family: monospace;">${message}</h2>`;
+    }
+}
+
+// --- Security & Moderation ---
+function handleStrike() {
+    user.strikeCount++;
+    if (user.strikeCount >= 4) {
+        applyBan();
+    }
+}
+
+function applyBan() {
+    user.isBanned = true;
+    user.banExpiry = new Date().getTime() + (5 * 24 * 60 * 60 * 1000); // 5-day ban
+    updateUI("ACCOUNT BANNED FOR 5 DAYS", "#ff0055");
+}
+
+function checkAccess() {
+    if (user.isBanned) {
+        let now = new Date().getTime();
+        if (now > user.banExpiry) {
+            user.isBanned = false;
+            user.strikeCount = 0;
+            return true;
+        }
+        return false;
+    }
+    return true;
+}
